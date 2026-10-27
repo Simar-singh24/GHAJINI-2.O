@@ -29,6 +29,7 @@ from app.modules.reminders.router import router as reminders_router
 from app.modules.reminders.scheduler import start_scheduler, stop_scheduler
 from app.modules.voice.router import router as voice_router
 from app.modules.voice.transcriber import voice_transcriber
+from app.modules.integrity.router import router as integrity_router
 
 logging.basicConfig(
     level=logging.INFO,
@@ -210,3 +211,16 @@ app.include_router(privacy_router, prefix=f"{v1_prefix}/privacy", tags=["privacy
 app.include_router(dashboard_router, prefix=f"{v1_prefix}/dashboard", tags=["dashboard"])
 app.include_router(companion_router, prefix=f"{v1_prefix}/companion", tags=["companion"])
 app.include_router(demo_router, prefix=f"{v1_prefix}/demo", tags=["demo"])
+app.include_router(integrity_router, prefix=f"{v1_prefix}/integrity", tags=["integrity"])
+
+# Serve Web Companion directly in browser
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+
+static_dir = os.path.join(os.path.dirname(__file__), "static")
+if os.path.exists(static_dir):
+    app.mount("/static", StaticFiles(directory=static_dir), name="static")
+
+    @app.get("/", include_in_schema=False)
+    def serve_home():
+        return FileResponse(os.path.join(static_dir, "index.html"))

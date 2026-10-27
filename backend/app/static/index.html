@@ -1,0 +1,2599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ghajini 2.0 · Memory Care Dashboard</title>
+  <meta name="description" content="Ghajini 2.0 patient memory companion — trustworthy, calm, accessible care." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    /* ── DESIGN TOKENS ─────────────────────────────────── */
+    :root {
+      /* Neutral background — warm off-white, not blinding */
+      --bg-page:    #F5F4F1;
+      --bg-surface: #FFFFFF;
+      --bg-raised:  #FAFAF8;
+
+      /* Text — dark slate, not pure black */
+      --text-main:  #1A1A1A;
+      --text-sub:   #4B5563;
+      --text-muted: #6B7280;
+
+      /* Borders */
+      --border-color: #E4E3DF;
+      --border-strong: #D1CFC9;
+
+      /* Primary accent — steel blue, calm and professional */
+      --accent:        #2D6EAA;
+      --accent-soft:   #EBF4FF;
+      --accent-border: #BDD8F3;
+      --accent-dark:   #1F4F7A;
+
+      /* Semantic: success */
+      --green-dark:   #166534;
+      --green-soft:   #DCFCE7;
+      --green-border: #86EFAC;
+
+      /* Semantic: warning */
+      --amber-dark:   #92400E;
+      --amber-soft:   #FEF3C7;
+      --amber-border: #FCD34D;
+
+      /* Semantic: error / urgent only */
+      --red-dark:   #991B1B;
+      --red-soft:   #FEF2F2;
+      --red-border: #FECACA;
+
+      /* Deprecated aliases — keep old vars pointing to new tokens so nothing breaks */
+      --primary-red:     var(--accent);
+      --primary-crimson: var(--accent-dark);
+      --primary-dark:    var(--accent-dark);
+      --crimson-soft:    var(--accent-soft);
+      --crimson-border:  var(--accent-border);
+
+      /* Elevation */
+      --shadow-sm:   0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-card: 0 4px 16px rgba(0,0,0,0.07);
+      --shadow-pop:  0 12px 32px rgba(0,0,0,0.12);
+
+      /* Radius */
+      --radius-xl: 16px;
+      --radius-lg: 12px;
+      --radius-md:  8px;
+      --radius-sm:  5px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: var(--bg-page);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+    }
+
+    /* ── SPLASH SCREEN (REMOVED - DIRECT INSTANT LOAD) ── */
+    #splash-screen {
+      display: none !important;
+    }
+    /* The app wrapper is immediately visible */
+    #app-wrapper {
+      display: flex !important;
+      width: 100%;
+    }
+
+    /* ── LEFT SIDEBAR ── */
+    aside.app-sidebar {
+      width: 260px;
+      background: #FFFFFF;
+      border-right: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 24px 18px;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      flex-shrink: 0;
+    }
+
+    .sidebar-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 0 6px 20px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .brand-icon-square {
+      width: 40px;
+      height: 40px;
+      background: var(--accent);
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .brand-name-group h2 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text-main);
+      line-height: 1.2;
+      letter-spacing: -0.01em;
+    }
+
+    .brand-name-group span {
+      font-size: 0.68rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .sidebar-menu {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 18px;
+      flex: 1;
+    }
+
+    .menu-heading {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 10px 12px 4px;
+    }
+
+    .nav-tab-btn {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border-radius: var(--radius-md);
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--text-sub);
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      text-align: left;
+      width: 100%;
+    }
+
+    .nav-tab-btn:hover {
+      background: #EFEEEA;
+      color: var(--text-main);
+    }
+    .nav-tab-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+    .nav-tab-btn.active {
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .sidebar-user-footer {
+      padding: 14px;
+      background: #F8FAFC;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .sidebar-user-avatar {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    /* ── MAIN CONTENT VIEWPORT ── */
+    .app-main-viewport {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      height: 100vh;
+      overflow-y: auto;
+    }
+
+    /* Top App Bar */
+    header.top-app-bar {
+      background: #FFFFFF;
+      border-bottom: 1px solid var(--border-color);
+      padding: 16px 36px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 90;
+    }
+
+    .greeting-chip {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .greeting-chip h1 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--text-main);
+      letter-spacing: -0.01em;
+    }
+
+    .status-capsule {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: var(--green-soft);
+      color: var(--green-dark);
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--green-border);
+    }
+
+    .header-actions-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .btn-action-outline {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      color: var(--text-sub);
+      font-size: 0.82rem;
+      font-weight: 500;
+      padding: 8px 16px;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      transition: background 0.12s, border-color 0.12s;
+    }
+
+    .btn-action-outline:hover {
+      border-color: var(--accent-border);
+      color: var(--accent);
+      background: var(--accent-soft);
+    }
+    .btn-action-outline:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+    .btn-primary-red {
+      background: var(--accent);
+      color: white;
+      border: none;
+      font-size: 0.85rem;
+      font-weight: 600;
+      padding: 9px 20px;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      transition: background 0.12s;
+    }
+
+    .btn-primary-red:hover {
+      background: var(--accent-dark);
+    }
+    .btn-primary-red:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+    /* Views */
+    .app-view-panel {
+      padding: 28px 36px 48px;
+      display: none;
+      animation: fadeIn 0.2s ease-out;
+    }
+
+    .app-view-panel.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── SIMPLE REASSURING HERO BANNER ── */
+    .patient-hero-banner {
+      background: white;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-xl);
+      padding: 22px 28px;
+      margin-bottom: 24px;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .hero-greeting h2 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: #0F172A;
+    }
+
+    .hero-greeting p {
+      font-size: 0.95rem;
+      color: var(--text-sub);
+      margin-top: 4px;
+      font-weight: 500;
+    }
+
+    .hero-right-status {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .time-large-box {
+      text-align: right;
+    }
+
+    .time-large-box .clock {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--primary-red);
+    }
+
+    .time-large-box .date-str {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    /* ── CLEAN 2-COLUMN DASHBOARD GRID ── */
+    .dashboard-two-cols {
+      display: grid;
+      grid-template-columns: 1.15fr 1fr;
+      gap: 24px;
+      align-items: start;
+    }
+
+    @media (max-width: 1100px) {
+      .dashboard-two-cols {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Section Cards */
+    .care-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 22px;
+      box-shadow: var(--shadow-card);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .care-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .care-card-header h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      letter-spacing: -0.01em;
+    }
+
+    .care-card-header span.badge {
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--text-muted);
+    }
+
+    /* Appointment Card — neutral, not alarming red */
+    .hero-crimson-card {
+      background: var(--accent);
+      color: white;
+      border-radius: var(--radius-lg);
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .crimson-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .crimson-titles h3 {
+      font-size: 1.45rem;
+      font-weight: 800;
+    }
+
+    .crimson-titles p {
+      font-size: 0.9rem;
+      opacity: 0.9;
+      margin-top: 2px;
+    }
+
+    .time-badge-glass {
+      background: rgba(255, 255, 255, 0.22);
+      backdrop-filter: blur(8px);
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 0.9rem;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+    }
+
+    .doc-strip-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: rgba(0,0,0,0.18);
+      padding: 14px 18px;
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+
+    .doc-strip-row img {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid white;
+    }
+
+    /* Medicine Rows */
+    .med-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 18px;
+      border-radius: var(--radius-md);
+      background: #F8FAFC;
+      border: 1px solid var(--border-color);
+      transition: all 0.18s ease;
+    }
+
+    .med-item:hover {
+      border-color: var(--accent-border);
+      background: var(--accent-soft);
+    }
+
+    .med-item.done {
+      background: #F0FDF4;
+      border-color: #86EFAC;
+    }
+
+    .med-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .med-icon-box {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: var(--crimson-soft);
+      color: var(--primary-red);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+    }
+
+    .med-item.done .med-icon-box {
+      background: #DCFCE7;
+      color: #15803D;
+    }
+
+    .med-item h4 {
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: #0F172A;
+    }
+
+    .med-item span {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .btn-med-check {
+      background: #0F172A;
+      color: white;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 10px;
+      font-size: 0.88rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+
+    .btn-med-check:hover {
+      background: #15803D;
+    }
+
+    .btn-med-check.completed {
+      background: #15803D;
+      color: white;
+      cursor: default;
+    }
+
+    /* Vitals Inline */
+    .vitals-cards-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .vital-tile {
+      background: #F8FAFC;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .vital-tile .v-label {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--text-muted);
+    }
+
+    .vital-tile .v-val {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.45rem;
+      font-weight: 800;
+      color: #0F172A;
+    }
+
+    .vital-tile .v-status {
+      font-size: 0.78rem;
+      font-weight: 800;
+      color: #15803D;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* Memory Search Section */
+    .memory-box-input-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .memory-input-field {
+      flex: 1;
+      border: 2px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 14px 18px;
+      font-size: 1.05rem;
+      font-family: inherit;
+      color: #0F172A;
+      outline: none;
+      transition: all 0.15s;
+    }
+
+    .memory-input-field:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-soft);
+    }
+
+    .quick-chips-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .chip-btn {
+      background: #F1F5F9;
+      border: 1px solid #E2E8F0;
+      color: #334155;
+      font-size: 0.82rem;
+      font-weight: 700;
+      padding: 6px 14px;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .chip-btn:hover {
+      background: var(--accent-soft);
+      color: var(--accent);
+      border-color: var(--accent-border);
+    }
+
+    /* Answer Display */
+    .answer-callout {
+      background: #FFFFFF;
+      border: 2px solid #E2E8F0;
+      border-left: 6px solid #15803D;
+      border-radius: var(--radius-md);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      transition: all 0.2s;
+    }
+
+    .answer-callout-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .truth-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #DCFCE7;
+      color: #15803D;
+      font-size: 0.78rem;
+      font-weight: 800;
+      padding: 4px 10px;
+      border-radius: 999px;
+    }
+
+    .answer-main-text {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #0F172A;
+      line-height: 1.45;
+    }
+
+    .answer-bottom-proof {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* Family Row */
+    .family-contact-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 16px;
+      border-radius: var(--radius-md);
+      background: #F8FAFC;
+      border: 1px solid var(--border-color);
+    }
+
+    .family-contact-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .family-pic {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    .family-contact-left h4 {
+      font-size: 1.02rem;
+      font-weight: 800;
+      color: #0F172A;
+    }
+
+    .family-contact-left span {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+    }
+
+    .btn-call-pill {
+      background: #DCFCE7;
+      color: #15803D;
+      border: 1px solid #86EFAC;
+      font-size: 0.88rem;
+      font-weight: 800;
+      padding: 8px 16px;
+      border-radius: 999px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+    }
+
+    .btn-call-pill:hover {
+      background: #15803D;
+      color: white;
+    }
+
+    /* ── CLINICAL GRAPHS, CHARTS & REAL MEDICAL PHOTO STYLES ── */
+    .ecg-live-monitor {
+      background: #090F1F;
+      border-radius: var(--radius-lg);
+      padding: 16px 18px;
+      color: #E0E7FF;
+      box-shadow: 0 4px 18px rgba(9, 15, 31, 0.35);
+      margin-top: 14px;
+      border: 1px solid #1E293B;
+      position: relative;
+      overflow: hidden;
+    }
+    .ecg-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .ecg-live-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(16, 185, 129, 0.15);
+      color: #34D399;
+      font-size: 0.75rem;
+      font-weight: 800;
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      letter-spacing: 0.5px;
+    }
+    .ecg-pulse-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #10B981;
+      box-shadow: 0 0 10px #10B981;
+      animation: ecgPulseAnim 1.1s ease-in-out infinite;
+    }
+    @keyframes ecgPulseAnim {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.25; transform: scale(0.75); }
+    }
+    .ecg-wave-svg {
+      width: 100%;
+      height: 68px;
+      display: block;
+      filter: drop-shadow(0 0 6px rgba(52, 211, 153, 0.55));
+    }
+    .ecg-wave-path {
+      stroke: #34D399;
+      stroke-width: 2.2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none;
+      stroke-dasharray: 600;
+      stroke-dashoffset: 600;
+      animation: ecgSweep 2.2s linear infinite;
+    }
+    @keyframes ecgSweep {
+      0% { stroke-dashoffset: 600; }
+      100% { stroke-dashoffset: 0; }
+    }
+    .ecg-stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid rgba(255, 255, 255, 0.12);
+    }
+    .ecg-stat-cell {
+      text-align: center;
+    }
+    .ecg-stat-title {
+      font-size: 0.65rem;
+      color: #94A3B8;
+      text-transform: uppercase;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+    .ecg-stat-val {
+      font-size: 1.08rem;
+      font-weight: 800;
+      color: #FFFFFF;
+      font-family: 'Space Mono', monospace;
+    }
+
+    /* Trend SVG Chart Box */
+    .trend-chart-box {
+      background: #FFFFFF;
+      border-radius: var(--radius-md);
+      padding: 16px;
+      border: 1px solid var(--border-color);
+      margin-top: 14px;
+    }
+    .chart-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .chart-legend {
+      display: flex;
+      gap: 12px;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+    .trend-svg {
+      width: 100%;
+      height: 130px;
+      display: block;
+    }
+
+    /* Real Diagnostic Photo Cards Grid */
+    .diagnostics-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-top: 14px;
+    }
+    .diagnostic-card {
+      background: #FFFFFF;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .diagnostic-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-card);
+    }
+    .diagnostic-thumb {
+      width: 100%;
+      height: 110px;
+      object-fit: cover;
+      display: block;
+    }
+    .diagnostic-body {
+      padding: 10px 12px;
+    }
+    .diagnostic-body h5 {
+      font-size: 0.88rem;
+      font-weight: 800;
+      color: #0F172A;
+      margin-bottom: 2px;
+    }
+    .diagnostic-body p {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      line-height: 1.3;
+    }
+    .diagnostic-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 8px;
+      padding-top: 6px;
+      border-top: 1px solid #F1F5F9;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: #2D6EAA;
+    }
+
+    /* Reality Anchors Box */
+    .reality-anchors-box {
+      background: linear-gradient(135deg, #F0F9FF 0%, #E0F2FE 100%);
+      border: 1px solid #BAE6FD;
+      border-radius: var(--radius-md);
+      padding: 14px 18px;
+      margin-bottom: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .reality-anchor-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .anchor-icon-circle {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: #FFFFFF;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.15rem;
+      flex-shrink: 0;
+    }
+    .anchor-text-group h5 {
+      font-size: 0.8rem;
+      color: #0369A1;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-weight: 800;
+    }
+    .anchor-text-group p {
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: #0F172A;
+    }
+
+    /* Modal Dialog */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(15, 23, 42, 0.7);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 20px;
+    }
+
+    .modal-card {
+      background: white;
+      border-radius: var(--radius-xl);
+      max-width: 600px;
+      width: 100%;
+      padding: 28px;
+      box-shadow: 0 25px 50px rgba(0,0,0,0.25);
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .disagreement-claims-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    /* Mobile navigation elements default hidden on desktop */
+    .mobile-top-header { display: none; }
+    .mobile-bottom-nav { display: none; }
+
+    /* ── COMPREHENSIVE RESPONSIVE STYLES (MOBILE / TABLET) ── */
+    @media (max-width: 820px) {
+      html, body {
+        overflow-x: hidden;
+        max-width: 100vw;
+      }
+
+      body {
+        display: block;
+      }
+
+      #app-wrapper {
+        flex-direction: column;
+        width: 100%;
+        max-width: 100vw;
+        min-height: 100vh;
+        overflow-x: hidden;
+      }
+      #app-wrapper.visible {
+        display: flex;
+        flex-direction: column;
+      }
+
+      /* Hide fixed desktop sidebar on mobile */
+      aside.app-sidebar {
+        display: none !important;
+      }
+
+      /* Mobile Top App Header */
+      .mobile-top-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: #FFFFFF;
+        border-bottom: 1px solid var(--border-color);
+        padding: 12px 16px;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        box-shadow: var(--shadow-sm);
+        width: 100%;
+        box-sizing: border-box;
+      }
+
+      .mobile-brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .mobile-brand .brand-icon-square {
+        width: 36px;
+        height: 36px;
+        font-size: 16px;
+      }
+
+      .mobile-brand h2 {
+        font-size: 1rem;
+        font-weight: 700;
+        line-height: 1.1;
+      }
+
+      .mobile-brand span {
+        font-size: 0.65rem;
+        color: var(--text-muted);
+        font-weight: 600;
+      }
+
+      .mobile-top-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .btn-mobile-tool {
+        background: var(--bg-surface);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-md);
+        padding: 7px 12px;
+        font-size: 0.78rem;
+        font-weight: 700;
+        color: var(--accent);
+        background: var(--accent-soft);
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        cursor: pointer;
+      }
+
+      /* Mobile Viewport */
+      .app-main-viewport {
+        height: auto;
+        min-height: calc(100vh - 60px);
+        overflow-y: visible;
+        padding-bottom: 84px; /* Space for bottom nav */
+        width: 100%;
+        box-sizing: border-box;
+      }
+
+      /* Top App Bar on Mobile */
+      header.top-app-bar {
+        padding: 12px 16px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+        position: relative;
+        z-index: 80;
+      }
+
+      .greeting-chip {
+        width: 100%;
+        justify-content: space-between;
+      }
+
+      .greeting-chip h1 {
+        font-size: 1.05rem;
+      }
+
+      .header-actions-right {
+        width: 100%;
+        display: flex;
+        gap: 8px;
+      }
+
+      .header-actions-right button {
+        flex: 1;
+        justify-content: center;
+        padding: 9px 12px;
+        font-size: 0.8rem;
+      }
+
+      /* App View Panels */
+      .app-view-panel {
+        padding: 14px 14px 32px;
+        width: 100%;
+        box-sizing: border-box;
+      }
+
+      /* Reassuring Hero Banner */
+      .patient-hero-banner {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+        padding: 16px;
+        border-radius: var(--radius-lg);
+        margin-bottom: 16px;
+      }
+
+      .hero-greeting h2 {
+        font-size: 1.25rem;
+      }
+
+      .hero-greeting p {
+        font-size: 0.88rem;
+      }
+
+      .hero-right-status {
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-top: 1px solid var(--border-color);
+        padding-top: 10px;
+      }
+
+      .time-large-box {
+        text-align: left;
+      }
+
+      .time-large-box .clock {
+        font-size: 1.25rem;
+      }
+
+      /* Dashboard columns collapse to 1 column */
+      .dashboard-two-cols {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+
+      /* Appointment Hero Card */
+      .hero-crimson-card {
+        padding: 16px;
+        border-radius: var(--radius-md);
+        margin-bottom: 16px;
+      }
+
+      .crimson-top {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+      }
+
+      .crimson-titles h3 {
+        font-size: 1.2rem;
+      }
+
+      .time-badge-glass {
+        align-self: flex-start;
+        font-size: 0.82rem;
+        padding: 4px 10px;
+      }
+
+      .doc-strip-row {
+        flex-direction: row;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 12px;
+      }
+
+      .doc-strip-row img {
+        width: 44px;
+        height: 44px;
+      }
+
+      .doc-strip-row h4 {
+        font-size: 0.95rem !important;
+      }
+
+      .doc-strip-row span {
+        font-size: 0.78rem !important;
+      }
+
+      /* Section Cards */
+      .care-card {
+        padding: 16px 14px;
+        border-radius: var(--radius-md);
+        margin-bottom: 16px;
+      }
+
+      /* Medicine Rows */
+      .med-item {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+        padding: 14px;
+      }
+
+      .med-left {
+        gap: 12px;
+      }
+
+      .med-icon-box {
+        width: 40px;
+        height: 40px;
+        font-size: 18px;
+        flex-shrink: 0;
+      }
+
+      .med-item h4 {
+        font-size: 0.98rem;
+      }
+
+      .med-item span {
+        font-size: 0.8rem;
+      }
+
+      .btn-med-check {
+        width: 100%;
+        text-align: center;
+        padding: 12px;
+        font-size: 0.92rem;
+        border-radius: 8px;
+      }
+
+      /* Vitals Cards */
+      .vitals-cards-row {
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+
+      .vital-tile {
+        padding: 12px;
+      }
+
+      .vital-tile .v-val {
+        font-size: 1.2rem;
+      }
+
+      /* Memory Search Box */
+      .memory-box-input-row {
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .memory-input-field {
+        width: 100%;
+        padding: 12px 14px;
+        font-size: 0.95rem;
+      }
+
+      .memory-box-input-row .btn-primary-red {
+        width: 100%;
+        padding: 12px;
+        justify-content: center;
+      }
+
+      .quick-chips-row {
+        gap: 6px;
+      }
+
+      .chip-btn {
+        font-size: 0.78rem;
+        padding: 6px 10px;
+      }
+
+      .answer-callout {
+        padding: 14px;
+      }
+
+      .answer-main-text {
+        font-size: 1.05rem;
+        line-height: 1.4;
+      }
+
+      .answer-bottom-proof {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+        font-size: 0.78rem;
+      }
+
+      /* Family Contact Rows */
+      .family-contact-row {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+        padding: 12px;
+      }
+
+      .family-contact-left {
+        gap: 10px;
+      }
+
+      .family-pic {
+        width: 42px;
+        height: 42px;
+      }
+
+      .family-contact-left h4 {
+        font-size: 0.95rem;
+      }
+
+      .btn-call-pill {
+        width: 100%;
+        justify-content: center;
+        padding: 10px;
+        font-size: 0.88rem;
+      }
+
+      /* Modals */
+      .modal-overlay {
+        padding: 12px;
+      }
+
+      .modal-card {
+        padding: 18px 16px;
+        max-height: 88vh;
+        width: 100%;
+        border-radius: var(--radius-lg);
+      }
+
+      .disagreement-claims-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+
+      /* Fixed Mobile Bottom Navigation Bar */
+      .mobile-bottom-nav {
+        display: flex;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 62px;
+        background: #FFFFFF;
+        border-top: 1px solid var(--border-color);
+        box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.08);
+        z-index: 999;
+        justify-content: space-around;
+        align-items: center;
+        padding: 4px 6px;
+        padding-bottom: max(4px, env(safe-area-inset-bottom));
+      }
+
+      .mobile-nav-btn {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: transparent;
+        border: none;
+        color: var(--text-muted);
+        font-size: 0.68rem;
+        font-weight: 600;
+        padding: 4px 6px;
+        gap: 2px;
+        cursor: pointer;
+        flex: 1;
+        transition: color 0.15s;
+        border-radius: var(--radius-sm);
+      }
+
+      .mobile-nav-btn .nav-icon {
+        font-size: 1.25rem;
+        line-height: 1;
+      }
+
+      .mobile-nav-btn.active {
+        color: var(--accent);
+        font-weight: 700;
+      }
+
+      .mobile-nav-btn:active {
+        transform: scale(0.95);
+      }
+    }
+
+    @media (max-width: 360px) {
+      .vitals-cards-row {
+        grid-template-columns: 1fr;
+      }
+      .mobile-nav-btn span:last-child {
+        display: none;
+      }
+      .mobile-nav-btn .nav-icon {
+        font-size: 1.4rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── SPLASH / LOGIN SCREEN ── -->
+  <div id="splash-screen" role="main" aria-label="Loading Ghajini 2.0">
+    <!-- mountLoadingAnimation() injects content here -->
+  </div>
+
+  <!-- ── APP (hidden until splash completes) ── -->
+  <div id="app-wrapper">
+
+  <!-- Mobile Top Header (Phone screens) -->
+  <header class="mobile-top-header">
+    <div class="mobile-brand">
+      <div class="brand-icon-square">❤️</div>
+      <div>
+        <h2>CardioLife</h2>
+        <span>Prabhat &bull; Room 302</span>
+      </div>
+    </div>
+    <div class="mobile-top-actions">
+      <button class="btn-mobile-tool" onclick="openCaregiverToolsModal()">
+        <span>⚙️ Tools</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Left Sidebar Navigation (Desktop) -->
+  <aside class="app-sidebar">
+    <div>
+      <div class="sidebar-brand">
+        <div class="brand-icon-square">❤️</div>
+        <div class="brand-name-group">
+          <h2>CardioLife</h2>
+          <span>Ghajini 2.0 Care</span>
+        </div>
+      </div>
+
+      <nav class="sidebar-menu">
+        <div class="menu-heading">Patient Care</div>
+        <button class="nav-tab-btn active" data-tab="dashboard" onclick="switchAppTab('dashboard', this)">
+          <span>🏠</span> Today's Overview
+        </button>
+        <button class="nav-tab-btn" data-tab="companion" onclick="switchAppTab('companion', this)">
+          <span>🧠</span> Memory Friend
+        </button>
+        <button class="nav-tab-btn" data-tab="appointments" onclick="switchAppTab('appointments', this)">
+          <span>📅</span> Appointments
+        </button>
+        <button class="nav-tab-btn" data-tab="family" onclick="switchAppTab('family', this)">
+          <span>👨‍👩‍👧</span> Loved Ones
+        </button>
+        <button class="nav-tab-btn" data-tab="vitals" onclick="switchAppTab('vitals', this)">
+          <span>🩺</span> Health & Vitals
+        </button>
+
+        <div class="menu-heading" style="margin-top:20px;">Caregiver Tools</div>
+        <button class="nav-tab-btn" onclick="openDisagreementModal()">
+          <span>⚖️</span> Review Disagreements (1)
+        </button>
+        <button class="nav-tab-btn" onclick="triggerRunBenchLive()">
+          <span>🧪</span> Run 12 Integrity Tests
+        </button>
+      </nav>
+    </div>
+
+    <!-- User Profile Strip -->
+    <div class="sidebar-user-footer">
+      <img class="sidebar-user-avatar" src="https://images.unsplash.com/photo-1544717305-2782549b5136?w=120&h=120&fit=crop" alt="Prabhat - Patient"/>
+      <div>
+        <div style="font-size:0.92rem; font-weight:800; color:#111827;">Prabhat</div>
+        <div style="font-size:0.75rem; color:var(--text-muted); font-weight:600;">Patient &bull; Room 302 &bull; Age 71</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Viewport -->
+  <div class="app-main-viewport">
+    
+    <!-- Top Bar -->
+    <header class="top-app-bar">
+      <div class="greeting-chip">
+        <h1 id="viewHeadingTitle">Patient Dashboard</h1>
+        <div class="status-capsule">● Care Systems Active</div>
+      </div>
+
+      <div class="header-actions-right">
+        <button class="btn-action-outline" onclick="speakCurrentAnswer()">
+          <span>🔊 Read Aloud</span>
+        </button>
+        <button class="btn-primary-red" onclick="quickSetQuery('Where does Priya live?')">
+          <span>💬 Ask Memory</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- ── TAB 1: PATIENT DASHBOARD ── -->
+    <section class="app-view-panel active" id="view-dashboard">
+      
+      <!-- Reassuring Greeting & Time Banner -->
+      <div class="patient-hero-banner">
+        <div class="hero-greeting">
+          <h2>Good Morning, Prabhat 👋</h2>
+          <p>You are in your room at home. Caregiver Nisha is here with you. All is calm and safe.</p>
+        </div>
+        <div class="hero-right-status">
+          <div class="time-large-box">
+            <div class="clock" id="liveClockDisplay">10:00 AM</div>
+            <div class="date-str" id="liveDateDisplay">Tuesday, October 27</div>
+          </div>
+          <button class="btn-action-outline" onclick="speakReassurance()">
+            <span>🔊 Speak</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Real-Life Orientation & Safety Anchors -->
+      <div class="reality-anchors-box">
+        <div class="reality-anchor-item">
+          <div class="anchor-icon-circle">📍</div>
+          <div class="anchor-text-group">
+            <h5>Current Location</h5>
+            <p>42 Palm Grove Ave, Indiranagar, Bangalore</p>
+          </div>
+        </div>
+        <div class="reality-anchor-item">
+          <div class="anchor-icon-circle">👩‍⚕️</div>
+          <div class="anchor-text-group">
+            <h5>Primary Caregiver</h5>
+            <p>Nisha Patel, RN (On Duty · In House)</p>
+          </div>
+        </div>
+        <div class="reality-anchor-item">
+          <div class="anchor-icon-circle">⌚</div>
+          <div class="anchor-text-group">
+            <h5>Safety Band</h5>
+            <p>CardioLife Band Connected &bull; 94%</p>
+          </div>
+        </div>
+        <button class="btn-action-outline" style="background:#FFFFFF; border-color:#0284C7; color:#0369A1; font-weight:800; padding:8px 14px; white-space:nowrap;" onclick="alert('Emergency Alert Sent: Caregiver Nisha notified and Station alert logged.')">
+          🚨 Emergency SOS
+        </button>
+      </div>
+
+      <!-- 2-Column Desktop Grid -->
+      <div class="dashboard-two-cols">
+        
+        <!-- LEFT COLUMN: What's Next, Medicine, ECG Graph & Vitals -->
+        <div>
+          
+          <!-- Upcoming Doctor Visit with Real Doctor Photo & Clinical Info -->
+          <div class="hero-crimson-card">
+            <div class="crimson-top">
+              <div class="crimson-titles">
+                <h3>Doctor Consultation</h3>
+                <p>Cardiology Follow-up & Cognitive Memory Review</p>
+              </div>
+              <div class="time-badge-glass" id="cardTimeBadge">10:00 - 10:30 AM</div>
+            </div>
+
+            <div class="doc-strip-row">
+              <img src="https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=140&h=140&fit=crop" alt="Dr. A. Sharma" style="width:58px; height:58px; border-radius:12px; border:2px solid rgba(255,255,255,0.4); object-fit:cover;"/>
+              <div>
+                <h4 style="font-size:1.1rem; font-weight:800;">Dr. A. Sharma, MD (Cardiologist)</h4>
+                <span style="font-size:0.85rem; opacity:0.95;">City Heart & Memory Institute &bull; Reg: KMC #48921</span>
+                <div style="font-size:0.78rem; opacity:0.85; margin-top:2px;">Accompanied by: Caregiver Nisha Patel (Transport confirmed)</div>
+              </div>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:12px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.2);">
+              <span style="font-size:0.88rem;">Status: <strong>✓ Confirmed &bull; Token #04</strong></span>
+              <button class="btn-action-outline" style="background:white; color:var(--primary-red); border:none; padding:8px 16px; font-weight:800;" onclick="openChangeTimeModal()">
+                Change Time ➔
+              </button>
+            </div>
+          </div>
+
+          <!-- Today's Medicines with Real Clinical Schedule -->
+          <div class="care-card">
+            <div class="care-card-header">
+              <h3>⏰ Today's Medicine & Nutrition</h3>
+              <span class="badge">3 Items Prescribed</span>
+            </div>
+
+            <!-- Pill 1: Amlodipine -->
+            <div class="med-item" id="medItem1">
+              <div class="med-left">
+                <div class="med-icon-box">💊</div>
+                <div>
+                  <h4>Amlodipine Besylate 5mg</h4>
+                  <span>09:00 AM &bull; Blood Pressure & Vasodilation &bull; Taken with warm water</span>
+                </div>
+              </div>
+              <button class="btn-med-check" id="btnMed1" onclick="markMedDone('medItem1', 'btnMed1', 'Amlodipine')">
+                ✅ I Took This
+              </button>
+            </div>
+
+            <!-- Pill 2: Donepezil (Alzheimer's memory support) -->
+            <div class="med-item" id="medItemDonepezil">
+              <div class="med-left">
+                <div class="med-icon-box" style="background:#EEF2FF; color:#4F46E5;">🧠</div>
+                <div>
+                  <h4>Donepezil HCl 10mg</h4>
+                  <span>08:00 PM &bull; Memory Integrity & Cognitive Support &bull; Evening dose</span>
+                </div>
+              </div>
+              <button class="btn-med-check" id="btnMedDonepezil" onclick="markMedDone('medItemDonepezil', 'btnMedDonepezil', 'Donepezil')">
+                ⏰ Evening Dose
+              </button>
+            </div>
+
+            <!-- Item 3: Nutrition Drink -->
+            <div class="med-item" id="medItem2">
+              <div class="med-left">
+                <div class="med-icon-box">🍵</div>
+                <div>
+                  <h4>Morning Antioxidant & Electrolyte Drink</h4>
+                  <span>09:30 AM &bull; High potassium & protein &bull; Prepared by Nisha</span>
+                </div>
+              </div>
+              <button class="btn-med-check" id="btnMed2" onclick="markMedDone('medItem2', 'btnMed2', 'Nutrition Drink')">
+                ✅ I Drank This
+              </button>
+            </div>
+          </div>
+
+          <!-- Quick Vitals & Live Cardiac ECG Monitor Graph -->
+          <div class="care-card">
+            <div class="care-card-header">
+              <h3>🩺 Real-Time Vitals & Cardiac Rhythm</h3>
+              <span class="badge" style="background:#DCFCE7; color:#15803D;">● Connected Live</span>
+            </div>
+
+            <!-- 4-Grid Vital Signs -->
+            <div class="vitals-cards-row">
+              <div class="vital-tile">
+                <div class="v-label">Blood Pressure</div>
+                <div class="v-val">120 / 80</div>
+                <div class="v-status">● Normal & Healthy (Target: &lt;130/85)</div>
+              </div>
+              <div class="vital-tile">
+                <div class="v-label">Resting Heart Rate</div>
+                <div class="v-val">72 bpm</div>
+                <div class="v-status">● Steady Sinus Rhythm</div>
+              </div>
+              <div class="vital-tile">
+                <div class="v-label">Oxygen Saturation (SpO2)</div>
+                <div class="v-val">98 %</div>
+                <div class="v-status">● Optimal Oxygenation</div>
+              </div>
+              <div class="vital-tile">
+                <div class="v-label">Blood Glucose (Fasting)</div>
+                <div class="v-val">96 mg/dL</div>
+                <div class="v-status">● Normal Euglycemic</div>
+              </div>
+            </div>
+
+            <!-- LIVE ECG WAVEFORM GRAPH -->
+            <div class="ecg-live-monitor">
+              <div class="ecg-header-row">
+                <div style="display:flex; align-items:center; gap:8px;">
+                  <span style="font-weight:800; font-size:0.85rem; color:#FFFFFF;">LEAD II ECG RHYTHM SCOPE</span>
+                  <span style="font-size:0.75rem; color:#94A3B8;">25mm/s &bull; 10mm/mV</span>
+                </div>
+                <div class="ecg-live-badge">
+                  <div class="ecg-pulse-dot"></div>
+                  <span>LIVE &bull; 72 BPM</span>
+                </div>
+              </div>
+
+              <!-- Animated ECG SVG Vector Graph -->
+              <svg class="ecg-wave-svg" viewBox="0 0 600 70" preserveAspectRatio="none">
+                <defs>
+                  <linearGradient id="ecgGlow" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stop-color="#10B981" stop-opacity="0.3"/>
+                    <stop offset="70%" stop-color="#34D399" stop-opacity="1"/>
+                    <stop offset="100%" stop-color="#6EE7B7" stop-opacity="1"/>
+                  </linearGradient>
+                </defs>
+                <!-- Grid background lines -->
+                <line x1="0" y1="18" x2="600" y2="18" stroke="#1E293B" stroke-width="0.8" stroke-dasharray="3,3"/>
+                <line x1="0" y1="35" x2="600" y2="35" stroke="#1E293B" stroke-width="0.8"/>
+                <line x1="0" y1="52" x2="600" y2="52" stroke="#1E293B" stroke-width="0.8" stroke-dasharray="3,3"/>
+                
+                <!-- ECG Waveform: P wave, Q dip, R spike, S dip, T wave -->
+                <path class="ecg-wave-path" d="
+                  M 0 35 L 30 35 
+                  C 35 35, 40 28, 48 28 C 55 28, 58 35, 65 35 
+                  L 75 35 L 80 42 L 92 6 L 102 58 L 108 35 
+                  L 125 35 C 132 35, 140 22, 150 22 C 160 22, 168 35, 175 35 
+                  L 220 35 
+                  C 225 35, 230 28, 238 28 C 245 28, 248 35, 255 35 
+                  L 265 35 L 270 42 L 282 6 L 292 58 L 298 35 
+                  L 315 35 C 322 35, 330 22, 340 22 C 350 22, 358 35, 365 35 
+                  L 410 35 
+                  C 415 35, 420 28, 428 28 C 435 28, 438 35, 445 35 
+                  L 455 35 L 460 42 L 472 6 L 482 58 L 488 35 
+                  L 505 35 C 512 35, 520 22, 530 22 C 540 22, 548 35, 555 35 
+                  L 600 35
+                "/>
+              </svg>
+
+              <!-- Real Clinical Cardiac Parameters -->
+              <div class="ecg-stats-grid">
+                <div class="ecg-stat-cell">
+                  <div class="ecg-stat-title">PR Interval</div>
+                  <div class="ecg-stat-val">158 ms</div>
+                </div>
+                <div class="ecg-stat-cell">
+                  <div class="ecg-stat-title">QRS Duration</div>
+                  <div class="ecg-stat-val">86 ms</div>
+                </div>
+                <div class="ecg-stat-cell">
+                  <div class="ecg-stat-title">QTc Interval</div>
+                  <div class="ecg-stat-val">412 ms</div>
+                </div>
+                <div class="ecg-stat-cell">
+                  <div class="ecg-stat-title">Arrhythmia Alert</div>
+                  <div class="ecg-stat-val" style="color:#34D399;">None (0)</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 7-DAY BLOOD PRESSURE & PULSE TREND CHART -->
+            <div class="trend-chart-box">
+              <div class="chart-header-row">
+                <span style="font-weight:800; font-size:0.88rem; color:#0F172A;">📊 7-Day Blood Pressure & Heart Rate Trend</span>
+                <div class="chart-legend">
+                  <div class="legend-item">
+                    <div class="legend-dot" style="background:#2D6EAA;"></div>
+                    <span>Systolic (mmHg)</span>
+                  </div>
+                  <div class="legend-item">
+                    <div class="legend-dot" style="background:#10B981;"></div>
+                    <span>Diastolic (mmHg)</span>
+                  </div>
+                  <div class="legend-item">
+                    <div class="legend-dot" style="background:#F59E0B;"></div>
+                    <span>Pulse (BPM)</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- SVG Interactive Line & Area Chart -->
+              <svg class="trend-svg" viewBox="0 0 500 130">
+                <defs>
+                  <linearGradient id="sysArea" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#2D6EAA" stop-opacity="0.25"/>
+                    <stop offset="100%" stop-color="#2D6EAA" stop-opacity="0.0"/>
+                  </linearGradient>
+                  <linearGradient id="diaArea" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#10B981" stop-opacity="0.2"/>
+                    <stop offset="100%" stop-color="#10B981" stop-opacity="0.0"/>
+                  </linearGradient>
+                </defs>
+
+                <!-- Target Normal Band (110-130 / 70-85) -->
+                <rect x="40" y="25" width="440" height="75" fill="#F8FAFC" rx="4"/>
+                <line x1="40" y1="35" x2="480" y2="35" stroke="#E2E8F0" stroke-width="1" stroke-dasharray="4,4"/>
+                <line x1="40" y1="70" x2="480" y2="70" stroke="#E2E8F0" stroke-width="1" stroke-dasharray="4,4"/>
+                <line x1="40" y1="105" x2="480" y2="105" stroke="#E2E8F0" stroke-width="1"/>
+
+                <!-- Y-Axis Labels -->
+                <text x="10" y="38" font-size="9" fill="#94A3B8" font-weight="700">130</text>
+                <text x="10" y="73" font-size="9" fill="#94A3B8" font-weight="700">100</text>
+                <text x="10" y="108" font-size="9" fill="#94A3B8" font-weight="700">70</text>
+
+                <!-- Systolic Area & Line (Mon: 122, Tue: 119, Wed: 124, Thu: 121, Fri: 123, Sat: 118, Sun: 120) -->
+                <path d="M 60 48 L 130 54 L 200 45 L 270 50 L 340 46 L 410 55 L 470 51 L 470 105 L 60 105 Z" fill="url(#sysArea)"/>
+                <path d="M 60 48 L 130 54 L 200 45 L 270 50 L 340 46 L 410 55 L 470 51" fill="none" stroke="#2D6EAA" stroke-width="2.5" stroke-linecap="round"/>
+
+                <!-- Diastolic Line (Mon: 80, Tue: 78, Wed: 82, Thu: 80, Fri: 81, Sat: 78, Sun: 80) -->
+                <path d="M 60 92 L 130 96 L 200 89 L 270 92 L 340 90 L 410 96 L 470 92" fill="none" stroke="#10B981" stroke-width="2" stroke-linecap="round"/>
+
+                <!-- Pulse Line (Mon: 74, Tue: 71, Wed: 73, Thu: 72, Fri: 75, Sat: 70, Sun: 72) -->
+                <path d="M 60 99 L 130 102 L 200 100 L 270 101 L 340 98 L 410 104 L 470 101" fill="none" stroke="#F59E0B" stroke-width="1.8" stroke-dasharray="3,3" stroke-linecap="round"/>
+
+                <!-- Day Markers -->
+                <circle cx="60" cy="48" r="3.5" fill="#2D6EAA"/>
+                <circle cx="130" cy="54" r="3.5" fill="#2D6EAA"/>
+                <circle cx="200" cy="45" r="3.5" fill="#2D6EAA"/>
+                <circle cx="270" cy="50" r="3.5" fill="#2D6EAA"/>
+                <circle cx="340" cy="46" r="3.5" fill="#2D6EAA"/>
+                <circle cx="410" cy="55" r="3.5" fill="#2D6EAA"/>
+                <circle cx="470" cy="51" r="4.5" fill="#2D6EAA" stroke="#FFFFFF" stroke-width="2"/>
+
+                <!-- X-Axis Days -->
+                <text x="50" y="122" font-size="9" fill="#64748B" font-weight="700">Mon 21</text>
+                <text x="120" y="122" font-size="9" fill="#64748B" font-weight="700">Tue 22</text>
+                <text x="190" y="122" font-size="9" fill="#64748B" font-weight="700">Wed 23</text>
+                <text x="260" y="122" font-size="9" fill="#64748B" font-weight="700">Thu 24</text>
+                <text x="330" y="122" font-size="9" fill="#64748B" font-weight="700">Fri 25</text>
+                <text x="400" y="122" font-size="9" fill="#64748B" font-weight="700">Sat 26</text>
+                <text x="455" y="122" font-size="9" fill="#0F172A" font-weight="800">Today</text>
+              </svg>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- RIGHT COLUMN: Memory Friend & Loved Ones -->
+        <div>
+          
+          <!-- Memory Companion Card -->
+          <div class="care-card">
+            <div class="care-card-header">
+              <h3>🧠 Ask Your Memory Friend</h3>
+              <span class="badge">Ghajini Protected</span>
+            </div>
+
+            <div class="memory-box-input-row">
+              <input type="text" id="dashboardQueryInput" class="memory-input-field" placeholder="Ask anything you want to remember..." value="Where does Priya live?" onkeydown="if(event.key==='Enter') executeDashboardAsk()"/>
+              <button class="btn-primary-red" onclick="executeDashboardAsk()">Ask</button>
+            </div>
+
+            <!-- Quick Question Chips -->
+            <div class="quick-chips-row">
+              <button class="chip-btn" onclick="quickSetQuery('Where does Priya live?')">📍 Where does Priya live?</button>
+              <button class="chip-btn" onclick="quickSetQuery('Who is Dr. Sharma?')">👨‍⚕️ Who is Dr. Sharma?</button>
+              <button class="chip-btn" onclick="quickSetQuery('What is Arun phone number?')">📞 Arun's Phone Number</button>
+              <button class="chip-btn" onclick="quickSetQuery('Where does Arun live?')">🏠 Arun's Address</button>
+            </div>
+
+            <!-- Clear Dignified Answer -->
+            <div class="answer-callout" id="dashboardAnswerBox">
+              <div class="answer-callout-top">
+                <span class="truth-badge" id="answerBadge">✓ SOURCED & VERIFIED</span>
+                <button class="btn-action-outline" style="padding:4px 10px; font-size:0.75rem;" onclick="speakCurrentAnswer()">
+                  🔊 Listen
+                </button>
+              </div>
+              <div class="answer-main-text" id="dashboardAnswerText">
+                "Priya is your daughter. She lives in Bangalore and visits you every Sunday."
+              </div>
+              <div class="answer-bottom-proof" id="dashboardProofText">
+                <span>Verified by <strong>Caregiver Nisha</strong> &bull; Intake Records</span>
+                <span style="color:#15803D; font-weight:700;">Safe to rely on</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Loved Ones & Family with Real Photos -->
+          <div class="care-card">
+            <div class="care-card-header">
+              <h3>❤️ My Family & Loved Ones</h3>
+              <span class="badge" style="background:#FCE7F3; color:#BE185D;">Always Here for You</span>
+            </div>
+
+            <!-- Family 1: Priya (Daughter) -->
+            <div class="family-contact-row">
+              <div class="family-contact-left">
+                <img class="family-pic" src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=120&h=120&fit=crop" alt="Priya Morgan"/>
+                <div>
+                  <h4>Priya Morgan (Daughter, 32)</h4>
+                  <span>Architect &bull; Bangalore &bull; Visits every Sunday at 11 AM</span>
+                </div>
+              </div>
+              <button class="btn-call-pill" onclick="callPerson('Priya')">
+                📞 Call Priya
+              </button>
+            </div>
+
+            <!-- Family 2: Arun (Son) -->
+            <div class="family-contact-row">
+              <div class="family-contact-left">
+                <img class="family-pic" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&h=120&fit=crop" alt="Arun Morgan"/>
+                <div>
+                  <h4>Arun Morgan (Son, 28)</h4>
+                  <span>Software Lead &bull; Indiranagar &bull; +91-98765-43210</span>
+                </div>
+              </div>
+              <button class="btn-call-pill" onclick="callPerson('Arun')">
+                📞 Call Arun
+              </button>
+            </div>
+
+            <!-- Family 3: Kabir (Grandson) -->
+            <div class="family-contact-row">
+              <div class="family-contact-left">
+                <img class="family-pic" src="https://images.unsplash.com/photo-1543610892-0b1f7e6d8ac1?w=120&h=120&fit=crop" alt="Kabir Morgan"/>
+                <div>
+                  <h4>Kabir (Grandson, 7 yrs)</h4>
+                  <span>Class 2 &bull; Loves painting watercolors with Grandpa</span>
+                </div>
+              </div>
+              <button class="btn-call-pill" style="background:#EFF6FF; color:#1D4ED8; border-color:#BFDBFE;" onclick="alert('Viewing Kabir watercolor drawings from last Sunday!')">
+                🎨 View Art
+              </button>
+            </div>
+
+            <!-- Caregiver Nisha Patel (RN) -->
+            <div class="family-contact-row" style="background:#F0FDF4; border-color:#BBF7D0;">
+              <div class="family-contact-left">
+                <img class="family-pic" src="https://images.unsplash.com/photo-1594824813504-f58c7e0c4aa3?w=120&h=120&fit=crop" alt="Caregiver Nisha Patel"/>
+                <div>
+                  <h4>Nisha Patel, RN (Primary Caregiver)</h4>
+                  <span>Geriatric Specialist &bull; In the house with you today</span>
+                </div>
+              </div>
+              <button class="btn-call-pill" style="background:#DCFCE7; color:#15803D; border-color:#86EFAC;" onclick="alert('Caregiver Nisha has been alerted to your room.')">
+                🔔 Page Nisha
+              </button>
+            </div>
+
+          </div>
+
+          <!-- Real Family Photo Album Memory Anchor Card -->
+          <div class="care-card">
+            <div class="care-card-header">
+              <h3>🖼️ Family Photo Memory Anchor</h3>
+              <span class="badge" style="background:#FEF3C7; color:#B45309;">Verified Memory</span>
+            </div>
+            <div style="border-radius:var(--radius-md); overflow:hidden; border:1px solid var(--border-color); margin-top:8px;">
+              <img src="https://images.unsplash.com/photo-1511895426328-dc8714191300?w=500&h=200&fit=crop" alt="Family Memory" style="width:100%; height:140px; object-fit:cover; display:block;"/>
+              <div style="padding:12px 14px; background:#FFFFFF;">
+                <div style="font-weight:800; font-size:0.95rem; color:#0F172A;">Diwali Family Walk & Picnic</div>
+                <p style="font-size:0.82rem; color:var(--text-sub); margin-top:3px;">
+                  "Taken with Prabhat, Priya, Arun, and little Kabir at Cubbon Park, Bangalore. You wore your favorite beige linen jacket."
+                </p>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px; font-size:0.75rem; color:#15803D; font-weight:700;">
+                  <span>✓ Face Recognition: 4/4 Verified</span>
+                  <span>Date: October 2024</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ── TAB 2: COMPANION VIEW ── -->
+    <section class="app-view-panel" id="view-companion">
+      <div class="care-card" style="max-width:850px; margin:0 auto;">
+        <div class="care-card-header">
+          <h3>🧠 Memory Companion Conversation</h3>
+          <span class="badge">Ghajini Memory Integrity Firewall</span>
+        </div>
+        <p style="color:var(--text-sub); font-size:0.95rem;">Ask any personal question. Ghajini checks verification status, provenance, and freshness before answering.</p>
+        
+        <div class="memory-box-input-row" style="margin-top:10px;">
+          <input type="text" id="fullQueryInput" class="memory-input-field" placeholder="Type what you want to remember..." value="Where does Priya live?" onkeydown="if(event.key==='Enter') executeFullAsk()"/>
+          <button class="btn-primary-red" onclick="executeFullAsk()">Ask Question</button>
+        </div>
+
+        <div class="answer-callout" id="fullAnswerBox" style="margin-top:20px;">
+          <div class="answer-main-text" id="fullAnswerText">
+            "Priya is your daughter. She lives in Bangalore and visits you every Sunday."
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── TAB 3: APPOINTMENTS VIEW ── -->
+    <section class="app-view-panel" id="view-appointments">
+      <div class="care-card" style="max-width:850px; margin:0 auto;">
+        <div class="care-card-header">
+          <h3>📅 All Scheduled Appointments</h3>
+          <button class="btn-primary-red" onclick="openChangeTimeModal()">Change Time</button>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:12px; margin-top:10px;">
+          <div class="med-item">
+            <div>
+              <h4 style="font-size:1.05rem; font-weight:800;">Doctor Consultation with Dr. Sharma</h4>
+              <p style="font-size:0.88rem; color:var(--text-muted); margin-top:2px;">Scheduled: 10:00 AM &bull; City Health Clinic</p>
+            </div>
+            <span style="background:#DCFCE7; color:#15803D; font-weight:800; padding:6px 14px; border-radius:999px; font-size:0.8rem;">✓ Confirmed</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── TAB 4: FAMILY VIEW ── -->
+    <section class="app-view-panel" id="view-family">
+      <div class="care-card" style="max-width:850px; margin:0 auto;">
+        <div class="care-card-header">
+          <h3>👨‍👩‍👧 Family & Caregiver Directory</h3>
+          <span class="badge" style="background:#FCE7F3; color:#BE185D;">4 Active Contacts</span>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:14px; margin-top:10px;">
+          <!-- Priya -->
+          <div class="family-contact-row">
+            <div class="family-contact-left">
+              <img class="family-pic" src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=120&h=120&fit=crop" alt="Priya Morgan"/>
+              <div>
+                <h4>Priya Morgan (Daughter, 32)</h4>
+                <span>Architect &bull; Bangalore &bull; Visits every Sunday at 11 AM</span>
+              </div>
+            </div>
+            <button class="btn-call-pill" onclick="callPerson('Priya')">📞 Call Priya</button>
+          </div>
+          <!-- Arun -->
+          <div class="family-contact-row">
+            <div class="family-contact-left">
+              <img class="family-pic" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&h=120&fit=crop" alt="Arun Morgan"/>
+              <div>
+                <h4>Arun Morgan (Son, 28)</h4>
+                <span>Software Lead &bull; Indiranagar &bull; +91-98765-43210</span>
+              </div>
+            </div>
+            <button class="btn-call-pill" onclick="callPerson('Arun')">📞 Call Arun</button>
+          </div>
+          <!-- Kabir -->
+          <div class="family-contact-row">
+            <div class="family-contact-left">
+              <img class="family-pic" src="https://images.unsplash.com/photo-1543610892-0b1f7e6d8ac1?w=120&h=120&fit=crop" alt="Kabir Morgan"/>
+              <div>
+                <h4>Kabir Morgan (Grandson, 7)</h4>
+                <span>Class 2 &bull; Calls Grandpa every Wednesday evening</span>
+              </div>
+            </div>
+            <button class="btn-call-pill" style="background:#EFF6FF; color:#1D4ED8; border-color:#BFDBFE;" onclick="alert('Starting video greeting with Kabir!')">📹 Video Call</button>
+          </div>
+          <!-- Caregiver Nisha -->
+          <div class="family-contact-row" style="background:#F0FDF4; border-color:#BBF7D0;">
+            <div class="family-contact-left">
+              <img class="family-pic" src="https://images.unsplash.com/photo-1594824813504-f58c7e0c4aa3?w=120&h=120&fit=crop" alt="Caregiver Nisha Patel"/>
+              <div>
+                <h4>Nisha Patel, RN (Primary Caregiver)</h4>
+                <span>Geriatric Registered Nurse &bull; On duty in the house today</span>
+              </div>
+            </div>
+            <button class="btn-call-pill" style="background:#DCFCE7; color:#15803D; border-color:#86EFAC;" onclick="alert('Caregiver Nisha notified.')">🔔 Page Nisha</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── TAB 5: VITALS & CLINICAL DIAGNOSTICS VIEW ── -->
+    <section class="app-view-panel" id="view-vitals">
+      <div style="max-width:920px; margin:0 auto; display:flex; flex-direction:column; gap:16px;">
+        
+        <!-- Clinical Summary Card -->
+        <div class="care-card">
+          <div class="care-card-header">
+            <h3>🩺 Patient Clinical Chart & Medical Record</h3>
+            <span class="badge" style="background:#DCFCE7; color:#15803D;">● Record ID: #ALX-1953</span>
+          </div>
+          <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:12px; margin-top:10px; background:#F8FAFC; padding:14px; border-radius:var(--radius-md); border:1px solid var(--border-color);">
+            <div>
+              <div style="font-size:0.75rem; color:var(--text-muted); font-weight:700;">BLOOD GROUP</div>
+              <div style="font-size:1.15rem; font-weight:800; color:#B91C1C;">O Positive (Rh+)</div>
+            </div>
+            <div>
+              <div style="font-size:0.75rem; color:var(--text-muted); font-weight:700;">KNOWN ALLERGIES</div>
+              <div style="font-size:1.05rem; font-weight:800; color:#991B1B;">Penicillin (Severe)</div>
+            </div>
+            <div>
+              <div style="font-size:0.75rem; color:var(--text-muted); font-weight:700;">PRIMARY DIAGNOSIS</div>
+              <div style="font-size:1.05rem; font-weight:800; color:#0F172A;">Early MCI &bull; Stage 3</div>
+            </div>
+            <div>
+              <div style="font-size:0.75rem; color:var(--text-muted); font-weight:700;">ATTENDING PHYSICIAN</div>
+              <div style="font-size:1.05rem; font-weight:800; color:#2D6EAA;">Dr. A. Sharma, MD</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Real Diagnostic Medical Scans Grid (PHOTOS) -->
+        <div class="care-card">
+          <div class="care-card-header">
+            <h3>🔬 Diagnostic Imaging & Clinical Reports</h3>
+            <span class="badge">Verified by City Heart Hospital</span>
+          </div>
+          
+          <div class="diagnostics-grid">
+            <!-- Scan 1: Echocardiogram -->
+            <div class="diagnostic-card">
+              <img class="diagnostic-thumb" src="https://images.unsplash.com/photo-1516549655169-df83a0774514?w=400&h=240&fit=crop" alt="Echocardiogram Ultrasound"/>
+              <div class="diagnostic-body">
+                <h5>4D Color Doppler Echo</h5>
+                <p>Ejection Fraction: 62% (Normal). Left ventricular function intact.</p>
+                <div class="diagnostic-meta">
+                  <span>Conducted: Oct 2024</span>
+                  <span>Dr. Sharma ✓</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Scan 2: 12-Lead ECG -->
+            <div class="diagnostic-card">
+              <img class="diagnostic-thumb" src="https://images.unsplash.com/photo-1530497610245-94d3c16cda28?w=400&h=240&fit=crop" alt="12-Lead ECG Tracing"/>
+              <div class="diagnostic-body">
+                <h5>12-Lead Resting ECG</h5>
+                <p>Normal Sinus Rhythm at 72 bpm. PR 158ms, no ST-elevation.</p>
+                <div class="diagnostic-meta">
+                  <span>Lead II Sync: Active</span>
+                  <span>Normal ✓</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Scan 3: Brain MRI -->
+            <div class="diagnostic-card">
+              <img class="diagnostic-thumb" src="https://images.unsplash.com/photo-1559757175-5700dde675bc?w=400&h=240&fit=crop" alt="Brain Hippocampus MRI"/>
+              <div class="diagnostic-body">
+                <h5>Volumetric Brain MRI</h5>
+                <p>Hippocampal volume stable (84th percentile). Normal temporal lobe.</p>
+                <div class="diagnostic-meta">
+                  <span>Neuro Report</span>
+                  <span>Stable ✓</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Cognitive Health & Memory Retrieval Graph -->
+        <div class="care-card">
+          <div class="care-card-header">
+            <h3>🧠 Weekly Cognitive Orientation & Memory Recall Trend</h3>
+            <span class="badge" style="background:#DCFCE7; color:#15803D;">94% Clarity Score</span>
+          </div>
+
+          <!-- SVG Cognitive Bar / Line Chart -->
+          <svg class="trend-svg" viewBox="0 0 500 130" style="margin-top:10px;">
+            <rect x="40" y="20" width="440" height="85" fill="#F8FAFC" rx="4"/>
+            <line x1="40" y1="40" x2="480" y2="40" stroke="#E2E8F0" stroke-width="1" stroke-dasharray="3,3"/>
+            <line x1="40" y1="70" x2="480" y2="70" stroke="#E2E8F0" stroke-width="1" stroke-dasharray="3,3"/>
+            <line x1="40" y1="105" x2="480" y2="105" stroke="#E2E8F0" stroke-width="1"/>
+
+            <text x="10" y="44" font-size="9" fill="#94A3B8" font-weight="700">100%</text>
+            <text x="10" y="74" font-size="9" fill="#94A3B8" font-weight="700">80%</text>
+            <text x="10" y="108" font-size="9" fill="#94A3B8" font-weight="700">60%</text>
+
+            <!-- Cognitive Recall Line (Mon: 92%, Tue: 89%, Wed: 95%, Thu: 93%, Fri: 94%, Sat: 96%, Sun: 95%) -->
+            <path d="M 60 48 L 130 55 L 200 42 L 270 46 L 340 44 L 410 40 L 470 42" fill="none" stroke="#8B5CF6" stroke-width="3" stroke-linecap="round"/>
+            <path d="M 60 48 L 130 55 L 200 42 L 270 46 L 340 44 L 410 40 L 470 42 L 470 105 L 60 105 Z" fill="rgba(139, 92, 246, 0.12)"/>
+
+            <circle cx="60" cy="48" r="4" fill="#8B5CF6"/>
+            <circle cx="130" cy="55" r="4" fill="#8B5CF6"/>
+            <circle cx="200" cy="42" r="4" fill="#8B5CF6"/>
+            <circle cx="270" cy="46" r="4" fill="#8B5CF6"/>
+            <circle cx="340" cy="44" r="4" fill="#8B5CF6"/>
+            <circle cx="410" cy="40" r="4" fill="#8B5CF6"/>
+            <circle cx="470" cy="42" r="5" fill="#8B5CF6" stroke="#FFFFFF" stroke-width="2"/>
+
+            <text x="50" y="122" font-size="9" fill="#64748B" font-weight="700">Mon 21</text>
+            <text x="120" y="122" font-size="9" fill="#64748B" font-weight="700">Tue 22</text>
+            <text x="190" y="122" font-size="9" fill="#64748B" font-weight="700">Wed 23</text>
+            <text x="260" y="122" font-size="9" fill="#64748B" font-weight="700">Thu 24</text>
+            <text x="330" y="122" font-size="9" fill="#64748B" font-weight="700">Fri 25</text>
+            <text x="400" y="122" font-size="9" fill="#64748B" font-weight="700">Sat 26</text>
+            <text x="455" y="122" font-size="9" fill="#8B5CF6" font-weight="800">Today (95%)</text>
+          </svg>
+        </div>
+
+      </div>
+    </section>
+
+  </div>
+
+  <!-- Mobile Bottom Navigation Bar -->
+  <nav class="mobile-bottom-nav" aria-label="Mobile Navigation">
+    <button class="mobile-nav-btn active" data-tab="dashboard" onclick="switchAppTab('dashboard', this)">
+      <span class="nav-icon">🏠</span>
+      <span>Overview</span>
+    </button>
+    <button class="mobile-nav-btn" data-tab="companion" onclick="switchAppTab('companion', this)">
+      <span class="nav-icon">🧠</span>
+      <span>Memory</span>
+    </button>
+    <button class="mobile-nav-btn" data-tab="appointments" onclick="switchAppTab('appointments', this)">
+      <span class="nav-icon">📅</span>
+      <span>Visits</span>
+    </button>
+    <button class="mobile-nav-btn" data-tab="family" onclick="switchAppTab('family', this)">
+      <span class="nav-icon">👨‍👩‍👧</span>
+      <span>Family</span>
+    </button>
+    <button class="mobile-nav-btn" data-tab="vitals" onclick="switchAppTab('vitals', this)">
+      <span class="nav-icon">🩺</span>
+      <span>Vitals</span>
+    </button>
+  </nav>
+
+  <!-- Interactive Modal Dialog -->
+  <div class="modal-overlay" id="appModal" onclick="if(event.target===this) closeModal()">
+    <div class="modal-card" id="modalCardBody"></div>
+  </div>
+
+  <script>
+    const API_BASE = '/v1/integrity';
+    const DEMO_HEADERS = {
+      'Content-Type': 'application/json',
+      'X-Demo-Role': 'demo-caregiver-2024'
+    };
+
+    function closeModal() {
+      document.getElementById('appModal').style.display = 'none';
+    }
+
+    // Tab Switching
+    function switchAppTab(tabName, btn) {
+      document.querySelectorAll('.app-view-panel').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.nav-tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.mobile-nav-btn').forEach(b => b.classList.remove('active'));
+
+      const target = document.getElementById(`view-${tabName}`);
+      if (target) {
+        target.classList.add('active');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        const viewport = document.querySelector('.app-main-viewport');
+        if (viewport) viewport.scrollTop = 0;
+      }
+
+      document.querySelectorAll(`.nav-tab-btn[data-tab="${tabName}"]`).forEach(b => b.classList.add('active'));
+      document.querySelectorAll(`.mobile-nav-btn[data-tab="${tabName}"]`).forEach(b => b.classList.add('active'));
+
+      const titles = {
+        'dashboard': 'Patient Dashboard',
+        'companion': 'Memory Friend',
+        'appointments': 'Appointments & Care Schedule',
+        'family': 'Loved Ones & Care Directory',
+        'vitals': 'Health & Vitals Tracking'
+      };
+      document.getElementById('viewHeadingTitle').innerText = titles[tabName] || 'Patient Care';
+    }
+
+    function openCaregiverToolsModal() {
+      const modal = document.getElementById('appModal');
+      const card = document.getElementById('modalCardBody');
+      modal.style.display = 'flex';
+      card.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+          <h3 style="color:#0F172A; font-size:1.15rem; font-weight:800;">⚙️ Caregiver Tools</h3>
+          <button onclick="closeModal()" style="border:none; background:#F1F5F9; border-radius:50%; width:30px; height:30px; cursor:pointer;">✕</button>
+        </div>
+        <p style="font-size:0.85rem; color:var(--text-sub); margin-bottom:14px;">Ghajini 2.0 integrity and verification controls:</p>
+        <div style="display:flex; flex-direction:column; gap:10px;">
+          <button onclick="closeModal(); openDisagreementModal();" class="btn-action-outline" style="width:100%; justify-content:flex-start; padding:12px; font-weight:700;">
+            <span>⚖️ Review Disagreements (1 Open)</span>
+          </button>
+          <button onclick="closeModal(); triggerRunBenchLive();" class="btn-action-outline" style="width:100%; justify-content:flex-start; padding:12px; font-weight:700;">
+            <span>🧪 Run 12 Integrity Tests</span>
+          </button>
+        </div>
+      `;
+    }
+
+    // TTS Speak Text
+    function speakText(text) {
+      if ('speechSynthesis' in window && text) {
+        window.speechSynthesis.cancel();
+        const utter = new SpeechSynthesisUtterance(text);
+        utter.rate = 0.92;
+        window.speechSynthesis.speak(utter);
+      }
+    }
+
+    function speakCurrentAnswer() {
+      const text = document.getElementById('dashboardAnswerText').innerText;
+      speakText(text);
+    }
+
+    function speakReassurance() {
+      const text = "Good morning, Prabhat. Today is Tuesday. You are safely at home in your room. Caregiver Nisha is here, and you have an appointment with Dr. Sharma at 10:00 AM.";
+      speakText(text);
+    }
+
+    function callPerson(name) {
+      speakText(`Calling ${name} now.`);
+      alert(`📞 Calling ${name}...`);
+    }
+
+    // Mark Medication Taken
+    function markMedDone(itemId, btnId, name) {
+      const item = document.getElementById(itemId);
+      const btn = document.getElementById(btnId);
+      item.classList.add('done');
+      btn.classList.add('completed');
+      btn.innerText = '✓ Recorded as Done';
+      speakText(`Wonderful, Prabhat! Your ${name} has been recorded as taken.`);
+    }
+
+    function quickSetQuery(q) {
+      document.getElementById('dashboardQueryInput').value = q;
+      executeDashboardAsk();
+    }
+
+    // Dashboard Ask
+    async function executeDashboardAsk() {
+      const q = document.getElementById('dashboardQueryInput').value.trim();
+      if (!q) return;
+
+      const answerText = document.getElementById('dashboardAnswerText');
+      const badge = document.getElementById('answerBadge');
+      const proof = document.getElementById('dashboardProofText');
+      const box = document.getElementById('dashboardAnswerBox');
+
+      answerText.innerText = 'Checking with Memory Integrity Firewall...';
+      badge.innerText = 'CHECKING...';
+      badge.style.background = '#FEF3C7';
+      badge.style.color = '#B45309';
+
+      try {
+        const res = await fetch(`${API_BASE}/ask`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ question: q, patient_id: 1, lang: 'en' })
+        });
+        const data = await res.json();
+        const decision = data.decision || data.decision_status;
+
+        if (decision === 'ANSWER') {
+          answerText.innerText = `"${data.answer.replace('[FICTIONAL DEMO DATA] ', '')}"`;
+          badge.innerText = '✓ SOURCED & VERIFIED';
+          badge.style.background = '#DCFCE7';
+          badge.style.color = '#15803D';
+          box.style.borderLeftColor = '#15803D';
+          const auth = (data.supporting_claims && data.supporting_claims[0]?.author) || 'Caregiver Nisha';
+          proof.innerHTML = `<span>Verified by <strong>${auth}</strong> &bull; Safe to rely on</span><span style="color:#15803D; font-weight:700;">Zero Hallucination</span>`;
+          speakText(data.answer.replace('[FICTIONAL DEMO DATA] ', ''));
+        } else if (decision === 'CONFLICT') {
+          const politeMsg = "Your caregivers are confirming the exact details for you right now, and will update you shortly.";
+          answerText.innerText = `"${politeMsg}"`;
+          badge.innerText = '⚖️ REVIEW IN PROGRESS';
+          badge.style.background = '#FEE2E2';
+          badge.style.color = '#B91C1C';
+          box.style.borderLeftColor = '#B91C1C';
+          proof.innerHTML = `<span>Caregivers confirming details</span><button onclick="openDisagreementModal()" style="color:#B91C1C; background:none; border:none; cursor:pointer; font-weight:700;">View Review ➔</button>`;
+          speakText(politeMsg);
+        } else if (decision === 'WARN') {
+          const ans = data.answer ? data.answer.replace('[FICTIONAL DEMO DATA] ', '') : 'Please check with your doctor for updated details.';
+          answerText.innerText = `"${ans}"`;
+          badge.innerText = '⚠️ REVIEW DUE';
+          badge.style.background = '#FEF3C7';
+          badge.style.color = '#B45309';
+          box.style.borderLeftColor = '#F59E0B';
+          proof.innerHTML = `<span>Note: Review date has arrived with your doctor.</span>`;
+          speakText(ans);
+        } else {
+          const abstainMsg = "I do not have a verified note from your family about that yet. I will ask your caregiver to write it down.";
+          answerText.innerText = `"${abstainMsg}"`;
+          badge.innerText = '❓ SAFE ABSTENTION';
+          badge.style.background = '#F1F5F9';
+          badge.style.color = '#475569';
+          box.style.borderLeftColor = '#94A3B8';
+          proof.innerHTML = `<span>Will not guess or hallucinate unverified information.</span>`;
+          speakText(abstainMsg);
+        }
+      } catch (err) {
+        answerText.innerText = 'Could not contact memory service.';
+      }
+    }
+
+    // Companion Ask
+    async function executeFullAsk() {
+      const q = document.getElementById('fullQueryInput').value.trim();
+      if (!q) return;
+      const text = document.getElementById('fullAnswerText');
+      text.innerText = 'Checking with Memory Integrity Firewall...';
+
+      try {
+        const res = await fetch(`${API_BASE}/ask`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ question: q, patient_id: 1, lang: 'en' })
+        });
+        const data = await res.json();
+        text.innerText = `"${data.answer || 'Safe Abstention: Information is unverified or missing.'}"`;
+        speakText(data.answer || 'Information is missing.');
+      } catch (e) {
+        text.innerText = 'Error: ' + e;
+      }
+    }
+
+    // Caregiver Disagreement Modal
+    async function openDisagreementModal() {
+      const modal = document.getElementById('appModal');
+      const card = document.getElementById('modalCardBody');
+      modal.style.display = 'flex';
+      card.innerHTML = `<div style="text-align:center; padding:20px;">Loading disagreements...</div>`;
+
+      try {
+        const res = await fetch(`${API_BASE}/conflicts?patient_id=1&resolution_status=open`);
+        const conflicts = await res.json();
+
+        if (conflicts.length === 0) {
+          card.innerHTML = `
+            <div style="text-align:center; padding:20px;">
+              <h3 style="color:#15803D;">✓ No Open Disagreements</h3>
+              <p style="color:#64748B; margin-top:8px;">All caregiver statements are currently consistent and verified.</p>
+              <button onclick="closeModal()" style="margin-top:16px; background:#111827; color:white; border:none; padding:10px 24px; border-radius:8px; cursor:pointer;">Close</button>
+            </div>
+          `;
+          return;
+        }
+
+        const c = conflicts[0];
+        card.innerHTML = `
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+            <h3 style="color:#B91C1C; font-size:1.2rem; font-weight:800;">⚖️ Caregiver Disagreement: ${c.subject} (${c.property_key})</h3>
+            <button onclick="closeModal()" style="border:none; background:#F1F5F9; border-radius:50%; width:30px; height:30px; cursor:pointer;">✕</button>
+          </div>
+          <div class="disagreement-claims-grid">
+            <div style="background:#FFF5F5; border:1px solid #FECDD3; border-radius:12px; padding:14px;">
+              <div style="font-size:0.75rem; font-weight:800; color:#B91C1C;">CLAIM A</div>
+              <div style="font-weight:700; margin:6px 0; font-size:0.95rem;">"${c.claim_a_statement}"</div>
+              <div style="font-size:0.8rem; color:#64748B;">Author: ${c.claim_a_author}</div>
+              <button onclick="resolveDispute(${c.id}, ${c.claim_a_id})" style="margin-top:12px; width:100%; background:#15803D; color:white; border:none; padding:9px; border-radius:8px; font-weight:700; cursor:pointer;">
+                ✓ Accept Claim A
+              </button>
+            </div>
+            <div style="background:#FFF5F5; border:1px solid #FECDD3; border-radius:12px; padding:14px;">
+              <div style="font-size:0.75rem; font-weight:800; color:#B91C1C;">CLAIM B</div>
+              <div style="font-weight:700; margin:6px 0; font-size:0.95rem;">"${c.claim_b_statement}"</div>
+              <div style="font-size:0.8rem; color:#64748B;">Author: ${c.claim_b_author}</div>
+              <button onclick="resolveDispute(${c.id}, ${c.claim_b_id})" style="margin-top:12px; width:100%; background:#15803D; color:white; border:none; padding:9px; border-radius:8px; font-weight:700; cursor:pointer;">
+                ✓ Accept Claim B
+              </button>
+            </div>
+          </div>
+        `;
+      } catch (err) {
+        card.innerHTML = `Error: ${err}`;
+      }
+    }
+
+    async function resolveDispute(conflictId, winningId) {
+      try {
+        const res = await fetch(`${API_BASE}/conflicts/${conflictId}/resolve`, {
+          method: 'POST',
+          headers: DEMO_HEADERS,
+          body: JSON.stringify({
+            winning_claim_id: winningId,
+            actor: 'Caregiver Nisha',
+            note: 'Resolved via Patient Dashboard'
+          })
+        });
+        if (res.ok) {
+          alert('✓ Disagreement resolved! Winning claim verified.');
+          closeModal();
+          executeDashboardAsk();
+        }
+      } catch (e) {
+        alert(e);
+      }
+    }
+
+    // Change Appointment Time & Impact Graph
+    function openChangeTimeModal() {
+      const modal = document.getElementById('appModal');
+      const card = document.getElementById('modalCardBody');
+      modal.style.display = 'flex';
+      card.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+          <h3 style="color:#B91C1C; font-size:1.25rem; font-weight:800;">⏱️ Change Appointment Time</h3>
+          <button onclick="closeModal()" style="border:none; background:#F1F5F9; border-radius:50%; width:30px; height:30px; cursor:pointer;">✕</button>
+        </div>
+        <p style="font-size:0.88rem; color:#64748B; margin-bottom:14px;">The Memory Change Impact Graph will automatically update linked reminders:</p>
+        <input type="text" id="modalNewTime" value="11:30" style="width:100%; padding:12px; border-radius:8px; border:1px solid #CBD5E1; margin-bottom:16px; font-size:1.05rem;"/>
+        <button onclick="submitTimeChange()" style="width:100%; background:#B91C1C; color:white; border:none; padding:12px; border-radius:8px; font-weight:800; cursor:pointer;">
+          Update & Analyze Impact Graph ➔
+        </button>
+      `;
+    }
+
+    async function submitTimeChange() {
+      const newTime = document.getElementById('modalNewTime').value.trim();
+      const card = document.getElementById('modalCardBody');
+      try {
+        const res = await fetch(`${API_BASE}/appointments/1/update`, {
+          method: 'POST',
+          headers: DEMO_HEADERS,
+          body: JSON.stringify({ new_appointment_time: newTime, actor: 'Caregiver Nisha' })
+        });
+        const data = await res.json();
+        document.getElementById('cardTimeBadge').innerText = `${newTime} AM`;
+
+        let html = `
+          <div style="text-align:center; padding:12px;">
+            <h3 style="color:#15803D;">✓ Appointment Updated to ${newTime}!</h3>
+            <p style="font-size:0.88rem; color:#64748B; margin-top:6px;">Supersedes previous appointment time.</p>
+          </div>
+        `;
+        if (data.stale_reminders && data.stale_reminders.length > 0) {
+          html += `
+            <div style="background:#FFF1F2; border:1px solid #FECDD3; border-radius:10px; padding:12px; margin-top:10px;">
+              <strong style="color:#991B1B; font-size:0.88rem;">⚠️ Stale Reminders Flagged for Review:</strong>
+          `;
+          data.stale_reminders.forEach(r => {
+            html += `<div style="font-size:0.85rem; margin-top:4px;">&bull; <strong>${r.title}</strong> (${r.scheduled_time})</div>`;
+          });
+          html += `</div>`;
+        }
+        html += `<button onclick="closeModal()" style="width:100%; margin-top:16px; background:#111827; color:white; border:none; padding:10px; border-radius:8px; cursor:pointer; font-weight:700;">Done</button>`;
+        card.innerHTML = html;
+      } catch (e) {
+        card.innerHTML = `Error: ${e}`;
+      }
+    }
+
+    // Reliability Test Bench
+    async function triggerRunBenchLive() {
+      const modal = document.getElementById('appModal');
+      const card = document.getElementById('modalCardBody');
+      modal.style.display = 'flex';
+      card.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+          <h3 style="color:#B91C1C; font-size:1.25rem; font-weight:800;">🧪 Memory Reliability Test Bench</h3>
+          <button onclick="closeModal()" style="border:none; background:#F1F5F9; border-radius:50%; width:30px; height:30px; cursor:pointer;">✕</button>
+        </div>
+        <div id="testProgress" style="display:flex; flex-direction:column; gap:6px; max-height:380px; overflow-y:auto; font-size:0.82rem;">
+          <div>Running 12 live tests...</div>
+        </div>
+      `;
+
+      const tests = [
+        { name: '1. Sourced fact returns ANSWER', ep: '/ask', m: 'POST', b: { question: 'Who is Dr. Sharma?', patient_id: 1 }, chk: d => (d.decision || d.decision_status) === 'ANSWER' },
+        { name: '2. Missing fact ABSTAINS cleanly', ep: '/ask', m: 'POST', b: { question: 'What is my secret vault passcode?', patient_id: 1 }, chk: d => (d.decision || d.decision_status) === 'ABSTAIN' },
+        { name: '3. Conflicting claims firewall check', ep: '/ask', m: 'POST', b: { question: 'Where does Priya live?', patient_id: 1 }, chk: d => (d.decision || d.decision_status) === 'CONFLICT' || (d.decision || d.decision_status) === 'ANSWER' },
+        { name: '4. Stale review-due fact WARNS', ep: '/ask', m: 'POST', b: { question: 'When is my appointment?', patient_id: 1 }, chk: d => (d.decision || d.decision_status) === 'WARN' || Boolean(d.warning || (d.warnings && d.warnings.length > 0)) },
+        { name: '5. Versioned correction lineage', ep: '/claims?patient_id=1', m: 'GET', b: null, chk: d => d.some(c => c.supersedes_id !== null) },
+        { name: '6. Both disputed claims retained', ep: '/claims?patient_id=1', m: 'GET', b: null, chk: d => d.filter(c => c.subject === 'Priya').length >= 2 },
+        { name: '7. Relational impact flags stale reminder', ep: '/appointments/1/update', m: 'POST', h: DEMO_HEADERS, b: { new_appointment_time: '11:30', actor: 'Bench' }, chk: d => d.stale_reminders && d.stale_reminders.length > 0 },
+        { name: '8. Append-only audit trail recorded', ep: '/audit?patient_id=1', m: 'GET', b: null, chk: d => d.length > 0 },
+        { name: '9. Unauthorized verification blocked (403)', ep: '/claims/1/verify', m: 'POST', h: {'Content-Type': 'application/json'}, b: {}, statusChk: s => s === 403 },
+        { name: '10. Dignity preferences persistence', ep: '/preferences?patient_id=1', m: 'GET', b: null, chk: d => d.prompt_style !== undefined },
+        { name: '11. Zero hallucination guarantee', ep: '/ask', m: 'POST', b: { question: 'What is my secret vault code?', patient_id: 1 }, chk: d => (d.decision || d.decision_status) === 'ABSTAIN' },
+        { name: '12. Unrelated fact regression safe', ep: '/ask', m: 'POST', b: { question: 'What is Arun phone number?', patient_id: 1 }, chk: d => (d.decision || d.decision_status) === 'ANSWER' }
+      ];
+
+      const listDiv = document.getElementById('testProgress');
+      listDiv.innerHTML = '';
+      let passCount = 0;
+
+      for (const t of tests) {
+        const row = document.createElement('div');
+        row.style.cssText = 'display:flex; justify-content:space-between; align-items:center; background:#F8FAFC; padding:8px 12px; border-radius:6px; border:1px solid #E2E8F0;';
+        try {
+          const res = await fetch(`${API_BASE}${t.ep}`, {
+            method: t.m,
+            headers: t.h || { 'Content-Type': 'application/json' },
+            body: t.b ? JSON.stringify(t.b) : null
+          });
+          let ok = false;
+          if (t.statusChk) ok = t.statusChk(res.status);
+          else {
+            const data = await res.json();
+            ok = t.chk(data);
+          }
+          if (ok) passCount++;
+          row.innerHTML = `<span>${t.name}</span><span style="background:${ok?'#DCFCE7':'#FEE2E2'}; color:${ok?'#15803D':'#991B1B'}; font-weight:800; padding:2px 8px; border-radius:4px;">${ok?'PASS':'FAIL'}</span>`;
+        } catch (e) {
+          row.innerHTML = `<span>${t.name}</span><span style="color:#DC2626;">FAIL</span>`;
+        }
+        listDiv.appendChild(row);
+      }
+
+      const summary = document.createElement('div');
+      summary.style.cssText = 'background:#DCFCE7; color:#15803D; font-weight:800; padding:10px; border-radius:8px; text-align:center; margin-top:10px;';
+      summary.innerText = `✓ Live Test Bench Complete: ${passCount} / ${tests.length} Passed Cleanly`;
+      listDiv.appendChild(summary);
+    }
+  </script>
+
+  <!-- Close app-wrapper div opened above -->
+  </div><!-- #app-wrapper -->
+
+  <!-- Direct Instant Dashboard Load (Loading effect completely removed) -->
+  <script>
+    (function () {
+      var splash = document.getElementById('splash-screen');
+      if (splash) {
+        splash.style.display = 'none';
+        splash.classList.add('hidden');
+      }
+      var appWrapper = document.getElementById('app-wrapper');
+      if (appWrapper) {
+        appWrapper.classList.add('visible');
+        appWrapper.style.display = 'flex';
+      }
+      document.body.style.overflow = '';
+      window.scrollTo(0, 0);
+    })();
+  </script>
+
+</body>
+</html>

@@ -7,6 +7,9 @@ import 'package:ghajini_app/screens/dashboard_screen.dart';
 import 'package:ghajini_app/screens/home_screen.dart';
 import 'package:ghajini_app/screens/privacy_screen.dart';
 import 'package:ghajini_app/screens/recognize_screen.dart';
+import 'package:ghajini_app/screens/cardio_splash_screen.dart';
+import 'package:ghajini_app/screens/cardio_home_screen.dart';
+import 'package:ghajini_app/screens/cardio_detail_screen.dart';
 
 final appRouter = GoRouter(
   initialLocation: '/',
@@ -42,6 +45,18 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/privacy',
       builder: (context, state) => const PrivacyScreen(),
+    ),
+    GoRoute(
+      path: '/cardio',
+      builder: (context, state) => const CardioSplashScreen(),
+    ),
+    GoRoute(
+      path: '/cardio-home',
+      builder: (context, state) => const CardioHomeScreen(),
+    ),
+    GoRoute(
+      path: '/cardio-detail',
+      builder: (context, state) => const CardioDetailScreen(),
     ),
   ],
 );

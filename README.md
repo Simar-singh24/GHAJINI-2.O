@@ -1,10 +1,10 @@
-# Ghajini 2.0 - AI Memory Companion for Alzheimer's Patients
+# Ghajini 2.0 — Memory Integrity Engine & CardioLife Care UI
 
 A full-stack, local-first AI memory companion designed specifically for Alzheimer's patients and their caregivers. It features high-accuracy face recognition, grounded semantic memory retrieval, Ollama LLM integration, offline voice transcription with faster-whisper, automated medication reminders with iCal RRULE escalation, emergency phrase interception, caregiver alerts, Caregiver Analytics Dashboard, and a high-contrast elderly-friendly UI.
 
 ---
 
-## Architecture Overview
+## 🎨 UI & User Experience
 
 - **Backend**: FastAPI (Python 3.11), SQLAlchemy 2.x, SQLite, Pydantic v2
 - **Voice Transcription**: `faster-whisper` (model `small`, int8, CPU) with VAD filtering and language detection (`en`, `hi`, `pa`)
@@ -19,8 +19,67 @@ A full-stack, local-first AI memory companion designed specifically for Alzheime
 
 ---
 
-## Repo Structure
+## 🛡️ The 5 Pillars of the Memory Integrity Engine
 
+### 1. Memory Integrity Firewall
+Evaluates evidence provenance, freshness, and consistency before speaking any personal truth. Returns one of 5 structured decisions:
+- **`ANSWER`**: Sourced, verified by an authorized caregiver, fresh, and non-conflicting.
+- **`WARN`**: Information exists but is expired or past review due date; blocks unverified reliance.
+- **`REVIEW_REQUIRED`**: Unverified caregiver input or absent approval.
+- **`CONFLICT`**: Incompatible claims detected for the same subject and property key (e.g. Bangalore vs Chennai). Shows competing claims side-by-side without selecting an arbitrary winner.
+- **`ABSTAIN`**: Missing facts; abstains safely with zero hallucination.
+
+### 2. Memory Change Impact Graph
+Maintains explicit relational dependencies between appointments and patient reminders. When an appointment time changes (e.g. 10:00 to 11:30), the engine:
+- Preserves the old appointment version (`supersedes_id`).
+- Traverses the impact graph to find linked reminders still referencing the old time.
+- Flags affected reminders as `stale` with discrepancy alerts for caregiver review.
+- Leaves unrelated reminders completely unchanged.
+
+### 3. Caregiver Disagreement System
+When two caregivers submit conflicting information (e.g. Caregiver Nisha claims Priya lives in Bangalore; Caregiver Ravi claims Chennai):
+- Both claims are preserved with full author, source, and recorded timestamp metadata.
+- System requires an authorized caregiver (`X-Demo-Role: demo-caregiver-2024`) to explicitly resolve the conflict.
+- The rejected alternative is archived in an append-only audit log rather than silently overwritten.
+
+### 4. Dignity-Aware Assistance
+Configurable patient assistance settings:
+- **Prompt Style**: `gentle` (supportive, warm), `plain` (direct, concise), `discreet` (whisper / minimal).
+- **Notification Mode**: `quiet`, `immediate`, `daily_digest`.
+- **Privacy Controls**: User-controlled display of caregiver provenance and suppression of unresolved conflicts.
+
+### 5. Memory Reliability Test Bench
+12 automated, deterministic test scenarios executing live against backend integrity endpoints with computed pass/fail results.
+
+---
+
+## 🧪 Reliability Test Suite (100% Passing)
+
+All tests execute live deterministic logic with zero mock hardcoding:
+
+| # | Test Scenario | Target Outcome | Actual Status |
+|---|---|---|:---:|
+| 1 | Verified sourced fact | `decision=ANSWER` with supporting evidence | **PASS** |
+| 2 | Missing fact abstention | `decision=ABSTAIN` (no hallucinations) | **PASS** |
+| 3 | Conflicting claims firewall | `decision=CONFLICT` (no auto-winner) | **PASS** |
+| 4 | Stale review-due fact warning | `decision=WARN` with review discrepancy | **PASS** |
+| 5 | Versioned correction lineage | Old claim preserved via `supersedes_id` | **PASS** |
+| 6 | Caregiver disagreement preserved | Both conflicting claims retained in DB | **PASS** |
+| 7 | Impact graph flags stale reminder | Linked reminder marked stale; unlinked safe | **PASS** |
+| 8 | Append-only audit trail recorded | Actor and timestamp logged on each action | **PASS** |
+| 9 | Unauthorized caller blocked | HTTP 403 without `X-Demo-Role` | **PASS** |
+| 10 | Dignity preferences persistence | Settings saved and applied to outputs | **PASS** |
+| 11 | Zero-claim safe abstention | Unknown fact safely abstains | **PASS** |
+| 12 | Regression safety | Unrelated claims do not alter verified truths | **PASS** |
+
+---
+
+## 🚀 Running the Prototype (Windows PowerShell)
+
+### 1. Start the Backend Server
+```powershell
+cd D:\Ghajini-2.O\backend
+python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
 ```
 ghajini_2.0/
   backend/
